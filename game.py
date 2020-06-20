@@ -16,10 +16,20 @@ INITIAL_EPSILON = 1.0
 # Number of frames to throw into network
 NUM_FRAMES = 3
 
-class SpaceInvader(object):
+class Game(object):
 
-    def __init__(self, mode):
-        self.env = gym.make('SpaceInvaders-v0')
+    def __init__(self, game_name, mode):
+        if game_name == "tetris":
+            from nes_py.wrappers import JoypadSpace
+            import gym_tetris
+            from gym_tetris.actions import SIMPLE_MOVEMENT
+            self.env = gym_tetris.make('TetrisA-v2')
+            self.env = JoypadSpace(self.env, SIMPLE_MOVEMENT)
+            # import pdb
+            # pdb.set_trace()
+        else:
+            self.env = gym.make('SpaceInvaders-v0')
+
         self.env.reset()
         self.replay_buffer = ReplayBuffer(BUFFER_SIZE)
 
@@ -67,14 +77,23 @@ class SpaceInvader(object):
 
             predict_movement, predict_q_value = self.deep_q.predict_movement(curr_state, epsilon)
 
+            def step():
+                return self.env.step(predict_movement)
+
             reward, done = 0, False
             for i in range(NUM_FRAMES):
-                temp_observation, temp_reward, temp_done, _ = self.env.step(predict_movement)
+                try:
+                    temp_observation, temp_reward, temp_done, _ = step()
+                except ValueError:
+                    print("game done, resetting at observation %d" % observation_num)
+                    self.env.reset()
+                    temp_observation, temp_reward, temp_done, _ = step()
                 reward += temp_reward
                 self.process_buffer.append(temp_observation)
                 done = done | temp_done
 
             if observation_num % 10 == 0:
+                print("At observation: %d" % observation_num)
                 print("We predicted a q value of ", predict_q_value)
 
             if done:
@@ -93,10 +112,10 @@ class SpaceInvader(object):
                 self.deep_q.train(s_batch, a_batch, r_batch, d_batch, s2_batch, observation_num)
                 self.deep_q.target_train()
 
-            # Save the network every 100000 iterations
+            # Save the network every 10000 iterations
             if observation_num % 10000 == 9999:
                 print("Saving Network")
-                self.deep_q.save_network("saved.h5")
+                self.deep_q.save_network("saved_TetrisA-v3.h5")
 
             alive_frame += 1
             observation_num += 1

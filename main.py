@@ -1,12 +1,13 @@
 import argparse
-from space_invaders import SpaceInvader
+from game import Game
 
 # Hyperparameters
 NUM_FRAME = 1000000
 
-parser = argparse.ArgumentParser(description="Train and test different networks on Space Invaders")
+parser = argparse.ArgumentParser(description="Train and test different networks on Space Invaders or Tetris")
 
 # Parse arguments
+parser.add_argument("-g", "--game", type=str, action='store', help="Specify the game to train on. Defaults to space invaders", required=False)
 parser.add_argument("-n", "--network", type=str, action='store', help="Please specify the network you wish to use, either DQN or DDQN", required=True)
 parser.add_argument("-m", "--mode", type=str, action='store', help="Please specify the mode you wish to run, either train or test", required=True)
 parser.add_argument("-l", "--load", type=str, action='store', help="Please specify the file you wish to load weights from(for example saved.h5)", required=False)
@@ -17,7 +18,7 @@ parser.add_argument("-v", "--view", action='store_true', help="Display the netwo
 args = parser.parse_args()
 print(args)
 
-game_instance = SpaceInvader(args.network)
+game_instance = Game(args.game, args.network)
 
 if args.load:
     game_instance.load_network(args.load)

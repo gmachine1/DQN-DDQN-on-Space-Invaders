@@ -5,15 +5,17 @@ from keras.models import load_model, Sequential, Model
 from keras.layers.convolutional import Convolution2D
 from keras.optimizers import Adam
 from keras.layers.core import Activation, Dropout, Flatten, Dense
-from keras.layers import merge, Input
+from keras.layers import merge, Input, Average, Add, Subtract
 from keras import backend as K
 from replay_buffer import ReplayBuffer
+import tensorflow as tf
 
 # List of hyper-parameters and constants
 DECAY_RATE = 0.99
 NUM_ACTIONS = 6
 # Number of frames to throw into network
 NUM_FRAMES = 3
+
 
 class DuelQ(object):
     """Constructs the desired deep q learning network"""
@@ -23,27 +25,36 @@ class DuelQ(object):
     def construct_q_network(self):
         # Uses the network architecture found in DeepMind paper
         self.model = Sequential()
-        input_layer = Input(shape = (84, 84, NUM_FRAMES))
-        conv1 = Convolution2D(32, 8, 8, subsample=(4, 4), activation='relu')(input_layer)
-        conv2 = Convolution2D(64, 4, 4, subsample=(2, 2), activation='relu')(conv1)
-        conv3 = Convolution2D(64, 3, 3, activation = 'relu')(conv2)
+        # Keras 1.2 code commented out
+        input_layer = Input(shape=(84, 84, NUM_FRAMES))
+        conv1 = Convolution2D(32, (8, 8), strides=(4, 4), activation='relu')(input_layer)
+        conv2 = Convolution2D(64, (4, 4), strides=(2, 2), activation='relu')(conv1)
+        conv3 = Convolution2D(64, (3, 3), activation='relu')(conv2)
         flatten = Flatten()(conv3)
         fc1 = Dense(512)(flatten)
         advantage = Dense(NUM_ACTIONS)(fc1)
         fc2 = Dense(512)(flatten)
         value = Dense(1)(fc2)
-        policy = merge([advantage, value], mode = lambda x: x[0]-K.mean(x[0])+x[1], output_shape = (NUM_ACTIONS,))
-        # policy = Dense(NUM_ACTIONS)(merge_layer)
+        # policy = merge([advantage, value], mode=lambda x: x[0]-K.mean(x[0])+x[1], output_shape=(NUM_ACTIONS,))
+        # print(type(advantage))
+        # print(-advantage)
+        # test = Average()([-advantage])
+        # print(test)
+        neg_advantage_mean = tf.reshape(K.mean(-advantage), (1, 1))
+        #import pdb
+        #pdb.set_trace()
+        policy = Add()([advantage, neg_advantage_mean, value])
 
-        self.model = Model(input=[input_layer], output=[policy])
+
+        self.model = Model(inputs=[input_layer], outputs=[policy])
         self.model.compile(loss='mse', optimizer=Adam(lr=0.000001))
 
-        self.target_model = Model(input=[input_layer], output=[policy])
+        self.target_model = Model(inputs=[input_layer], outputs=[policy])
         self.target_model.compile(loss='mse', optimizer=Adam(lr=0.000001))
         print("Successfully constructed networks.")
 
     def predict_movement(self, data, epsilon):
-        """Predict movement of game controler where is epsilon
+        """Predict movement of game controller where is epsilon
         probability randomly move."""
         q_actions = self.model.predict(data.reshape(1, 84, 84, NUM_FRAMES), batch_size = 1)
         opt_policy = np.argmax(q_actions)
