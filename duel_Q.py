@@ -4,11 +4,10 @@ import keras
 from keras.models import load_model, Sequential, Model
 from keras.layers.convolutional import Convolution2D
 from keras.optimizers import Adam
-from keras.layers.core import Activation, Dropout, Flatten, Dense
-from keras.layers import merge, Input, Average, Add, Subtract
+from keras.layers.core import Activation, Dropout, Flatten, Dense, Lambda
+from keras.layers import merge, Input, Average, Add, Subtract, Reshape
 from keras import backend as K
 from replay_buffer import ReplayBuffer
-import tensorflow as tf
 
 # List of hyper-parameters and constants
 DECAY_RATE = 0.99
@@ -35,16 +34,13 @@ class DuelQ(object):
         advantage = Dense(NUM_ACTIONS)(fc1)
         fc2 = Dense(512)(flatten)
         value = Dense(1)(fc2)
-        # policy = merge([advantage, value], mode=lambda x: x[0]-K.mean(x[0])+x[1], output_shape=(NUM_ACTIONS,))
-        # print(type(advantage))
-        # print(-advantage)
-        # test = Average()([-advantage])
-        # print(test)
-        neg_advantage_mean = tf.reshape(K.mean(-advantage), (1, 1))
+
         #import pdb
         #pdb.set_trace()
-        policy = Add()([advantage, neg_advantage_mean, value])
-
+        # TODO: cannot run on pre-trained model (by Yilun Du on Keras 1.2) on Ubuntu 20.04 when there is K.mean involved,
+        # but with it removed, it can run
+        advantage_mean = Lambda(lambda x: K.reshape(K.mean(x), (1, 1)))(advantage)
+        policy = Add()([Subtract()([advantage, advantage_mean]), value])
 
         self.model = Model(inputs=[input_layer], outputs=[policy])
         self.model.compile(loss='mse', optimizer=Adam(lr=0.000001))
@@ -89,7 +85,7 @@ class DuelQ(object):
     def load_network(self, path):
         self.model.load_weights(path)
         self.target_model.load_weights(path)
-        print("Succesfully loaded network.")
+        print("Successfully loaded network.")
 
     def target_train(self):
         model_weights = self.model.get_weights()

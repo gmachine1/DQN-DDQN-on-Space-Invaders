@@ -1,8 +1,9 @@
-gym==0.17.2
 Keras==2.4.2
 numpy~=1.18.5
 opencv-python~=4.2.0.34
-gym[atari]
-atari_py==1.2.1
 tensorflow~=2.2.0
+cmake
+gym==0.17.2
+gym[atari]
+atari_py
 gym-tetris
