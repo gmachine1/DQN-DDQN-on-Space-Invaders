@@ -8,34 +8,7 @@ You can install all the prerequisites for code use using
 pip install -r requirements.txt
 ```
 
-In China on Ubuntu, I used conda and some China mirrors for faster downloads. For `~/.condarc`,
-
-```
-channels:
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
-  - conda-forge
-```
-
-Then
-
-```
-conda install tensorflow
-conda install keras
-conda install numpy
-conda install opencv
-conda install -c hcc gym
-conda install -c likan999 atari_py
-conda install -c jiayi_anaconda gym-atari
-sudo apt-get install -y python-pygame
-git clone https://github.com/lusob/gym-tetris.git
-cd gym-tetris/
-pip install -e .
-```
-
-### On windows
+### On windows (7)
 
 1. Download and install the appropriate `vc_redist.*.exe` file, which can be found [here](https://support.microsoft.com/zh-cn/help/2977003/the-latest-supported-visual-c-downloads).
 2. Uninstall gym and atari-py (If already installed):
@@ -72,6 +45,46 @@ and if everything worked then it should return a list of all games as shown belo
 'space_invaders', 'star_gunner', 'tennis', 'time_pilot', 'tutankham', 'up_n_down', 'venture',
 'video_pinball', 'wizard_of_wor', 'yars_revenge', 'zaxxon']
 ```
+
+### On Ubuntu (20.04)
+I used conda virtual environment and some China mirrors for faster downloads. For `~/.condarc`,
+
+```
+channels:
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
+  - conda-forge
+```
+
+Then
+
+```
+conda install tensorflow
+conda install keras
+conda install numpy
+conda install opencv
+conda install -c hcc gym
+conda install -c likan999 atari_py
+conda install -c jiayi_anaconda gym-atari
+sudo apt-get install -y python-pygame
+git clone https://github.com/lusob/gym-tetris.git
+cd gym-tetris/
+pip install -e .
+```
+
+In attempt to install NVIDIA driver and CUDA, I followed instructions from
+* https://zhuanlan.zhihu.com/p/136527897
+* https://blog.csdn.net/chenguizhenaza/article/details/100131944
+
+and used
+* https://mirrors.aliyun.com/nvidia-cuda/ubuntu1804/x86_64/
+
+in place of
+* http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64
+
+in the `Software Update`. It did not lead to good results, and I am considering trying on Ubuntu 18.04 instead. Or maybe my driver version GeForce GT 620 OEM is not compatible with CUDA 10.2.
 ## Instructions on Use
 Details about the code are covered in the blog [here](https://yilundu.github.io/2016/12/24/Deep-Q-Learning-on-Space-Invaders.html)
 
